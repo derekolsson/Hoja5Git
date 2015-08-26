@@ -23,7 +23,7 @@ def task(env, name, memory, cpu , creation_time, needed):
     # Creation of the process
     yield env.timeout(creation_time)
     created= env.now         #Arrival time
-    print "Task ",name,"Created at ",created
+    print "Task ",name,"Created at ",created,"with ",needed,"processes"
     #now in NEW
     state = 1    
     while (needed!=0):
@@ -31,19 +31,28 @@ def task(env, name, memory, cpu , creation_time, needed):
             print "Task ",name,"Getting memory"
             requesting = random.randint(1,needed)
             print "Task ",name,"needs ",requesting
+            if memory.level==0:
+                print "MEMORY FULL! RUN FOR YOUR LIVES!"
             yield memory.get(requesting)
             print "Task ",name,"Got memory"
             with cpu.request() as req:  #pedimos atención del cpu
                 yield req
+            print "Task ",name,"Was Attended to"
             if (needed>3):
                 needed = needed-3
                 state = random.randint(1,2)
+                print "Task ",name,"processed, still has",needed
+                print "Sent to state ",state
             else:
                 needed = 0
+                print "Task ",name,"finished"
             memory.put(requesting)
+            print "Task ",name,"Gave back ram"
         if state==2:
             waitTime = random.randint(1,5)
+            print "Task ",name,"will wait",waitTime
             yield env.timeout(waitTime)
+            state = 1
 
             
                 
@@ -64,7 +73,7 @@ RANDOM_SEED = 42
 random.seed(RANDOM_SEED)
 
 interval = 10
-nTasks = 3
+nTasks = 25
 avgTime =  0.0
 # crear los tasks
 for i in range(nTasks):
