@@ -17,11 +17,11 @@ def task(env, name, memory, cpu , creation_time, needed):
     global avgTime     
     # Creation of the process
     yield env.timeout(creation_time)
-    created= env.now         #Arrival time
+    created= env.now         #Creation time
     print "Task ",name,"Created at ",created,"with ",needed,"processes"
     #now in NEW
     print "Task ",name,"Getting memory"
-    requesting = random.randint(1,needed)
+    requesting = random.randint(1, 10)
     print "Task ",name,"needs ",requesting
     if requesting>memory.level:
         print "\nWaiting on ram.....\n"
