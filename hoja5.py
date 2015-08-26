@@ -1,17 +1,12 @@
 import simpy
 import random
 
-#
-# el carro se conduce un tiempo y tiene que llegar a cargarse de energia
-# luego puede continuar conduciendo
-# Debe hacer cola (FIFO) en el cargador
-
 # env: environment de simpy
 # name: identificacion del task
 # memory:  cola para RAM (container)
-# cpu: cola para procesador
+# cpu: cola para procesador(Resource)
 # creation_time: tiempo para esperar antes de crear Task
-# needed: cantidad de operaaciones requeridas
+# needed: cantidad de operaciones requeridas
 
 
 
@@ -25,31 +20,37 @@ def task(env, name, memory, cpu , creation_time, needed):
     created= env.now         #Arrival time
     print "Task ",name,"Created at ",created,"with ",needed,"processes"
     #now in NEW
+    print "Task ",name,"Getting memory"
+    requesting = random.randint(1,needed)
+    print "Task ",name,"needs ",requesting
+    if requesting>memory.level:
+        print "\nWaiting on ram....."
+    yield memory.get(requesting)
+    print "Task ",name,"Got memory"    
     state = 1    
     while (needed!=0):
         if state==1:
-            print "Task ",name,"Getting memory"
-            requesting = random.randint(1,needed)
-            print "Task ",name,"needs ",requesting
-            if memory.level==0:
-                print "MEMORY FULL! RUN FOR YOUR LIVES!"
-            yield memory.get(requesting)
-            print "Task ",name,"Got memory"
+#            print "Task ",name,"Getting memory"
+#            requesting = random.randint(1,needed)
+#            print "Task ",name,"needs ",requesting
+#            yield memory.get(requesting)
+#            print "Task ",name,"Got memory"
             with cpu.request() as req:  #pedimos atención del cpu
                 yield req
+                yield env.timeout(1)
             print "Task ",name,"Was Attended to"
-            if (needed>3):
-                needed = needed-3
+            if (needed>speed):
+                needed = needed-speed
                 state = random.randint(1,2)
                 print "Task ",name,"processed, still has",needed
                 print "Sent to state ",state
             else:
                 needed = 0
                 print "Task ",name,"finished"
-            memory.put(requesting)
-            print "Task ",name,"Gave back ram"
+                memory.put(requesting)
+                print "Task ",name,"Gave back ram"
         if state==2:
-            waitTime = random.randint(1,5)
+            waitTime = random.randint(1,10)
             print "Task ",name,"will wait",waitTime
             yield env.timeout(waitTime)
             state = 1
@@ -61,20 +62,34 @@ def task(env, name, memory, cpu , creation_time, needed):
     print "Task ",name,"Done at ",env.now        
     total = env.now - created
     avgTime += total   #Put this in a list or something instead to get standard deviation
-    #print('%s took %s at the gas station' % (name, total))
     
+
+#CONFIGURACION DE PROCESOS
+interval = 5
+nTasks = 25
+
+#CONFIGURACION DEL RAM
+availableRAM= 100
+
+#CONFIGURACION DEL PROCESADOR
+speed = 3   #procesos que se puede realizar en 1 
+cores = 1
+
 
 #
 env = simpy.Environment()  #crear ambiente de simulacion
-processor = simpy.Resource(env) #cola para cpu
-ram = simpy.Container(env,init=100, capacity=100) #RAM tiene 100 unidades de memoria
+processor = simpy.Resource(env, capacity = cores) #cola para cpu
+ram = simpy.Container(env,init=availableRAM, capacity=availableRAM) #RAM tiene 100 unidades de memoria
 
 RANDOM_SEED = 42
 random.seed(RANDOM_SEED)
 
-interval = 10
-nTasks = 25
+
+
 avgTime =  0.0
+
+
+
 # crear los tasks
 for i in range(nTasks):
     t = random.expovariate(1.0 / interval)
