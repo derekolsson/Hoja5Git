@@ -24,7 +24,7 @@ def task(env, name, memory, cpu , creation_time, needed):
     requesting = random.randint(1,needed)
     print "Task ",name,"needs ",requesting
     if requesting>memory.level:
-        print "\nWaiting on ram....."
+        print "\nWaiting on ram.....\n"
     yield memory.get(requesting)
     print "Task ",name,"Got memory"    
     state = 1    
@@ -65,11 +65,11 @@ def task(env, name, memory, cpu , creation_time, needed):
     
 
 #CONFIGURACION DE PROCESOS
-interval = 5
+interval = 1
 nTasks = 25
 
 #CONFIGURACION DEL RAM
-availableRAM= 100
+availableRAM= 200
 
 #CONFIGURACION DEL PROCESADOR
 speed = 3   #procesos que se puede realizar en 1 
