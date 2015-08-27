@@ -19,36 +19,46 @@ def task(env, name, memory, cpu , creation_time, needed):
     yield env.timeout(creation_time)
     created= env.now         #Creation time
     print "Task ",name,"Created at ",created,"with ",needed,"processes"
-    #now in NEW
     print "Task ",name,"Getting memory"
+    #Generar cantidad de RAM para pedir
     requesting = random.randint(1, 10)
     print "Task ",name,"needs ",requesting
+    #Mostrar cuando no hay memoria suficiente    
     if requesting>memory.level:
-        print "\nWaiting on ram.....\n"
+        print "\nWaiting on RAM.....\n"
+    #Yield hasta que hay memoria disponible
     yield memory.get(requesting)
     print "Task ",name,"Got memory"    
+    
+    
     state = 1    
     while (needed!=0):
         if state==1:
-#            print "Task ",name,"Getting memory"
-#            requesting = random.randint(1,needed)
-#            print "Task ",name,"needs ",requesting
-#            yield memory.get(requesting)
-#            print "Task ",name,"Got memory"
+
             with cpu.request() as req:  #pedimos atención del cpu
-                yield req
-                yield env.timeout(1)
+                yield req               #Esperar en cola
+                yield env.timeout(1)    #pasar 1 unidad de tiempo en CPU
             print "Task ",name,"Was Attended to"
+
+            #Restar procesos realizados            
             if (needed>speed):
                 needed = needed-speed
+                #generar proximo estado al azar
                 state = random.randint(1,2)
                 print "Task ",name,"processed, still has",needed
                 print "Sent to state ",state
+            
+            #Si se puede terminar ultimo proceso....           
             else:
                 needed = 0
                 print "Task ",name,"finished"
+                #devolver RAM                
                 memory.put(requesting)
                 print "Task ",name,"Gave back ram"
+        
+        #cola de waiting
+        #esperar entre 1 y 10 unidades de tiempo
+        #regresar al cola de ready
         if state==2:
             waitTime = random.randint(1,10)
             print "Task ",name,"will wait",waitTime
@@ -58,7 +68,7 @@ def task(env, name, memory, cpu , creation_time, needed):
             
                 
             
-            #yield env.timeout(charge_duration)
+    #Proceso terminado, calcular tiempo total
     print "Task ",name,"Done at ",env.now        
     total = env.now - created
     avgTime += total   #Put this in a list or something instead to get standard deviation
@@ -102,3 +112,5 @@ env.run()
 avgTime = avgTime/nTasks
 print "Average Time: ", avgTime
     
+
+
